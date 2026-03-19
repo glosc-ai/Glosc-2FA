@@ -10,16 +10,20 @@ import SwiftData
 
 @main
 struct Glosc_2faApp: App {
+    private static let uiTestingResetArgument = "UITEST_RESET_STATE"
+
     @Environment(\.scenePhase) private var scenePhase
 
     @StateObject private var preferences: AppPreferences
     @StateObject private var securityController: AppSecurityController
+    @StateObject private var copyFeedbackController = CopyFeedbackController()
 
     var sharedModelContainer: ModelContainer = {
+        let useInMemoryStore = ProcessInfo.processInfo.arguments.contains(uiTestingResetArgument)
         let schema = Schema([
             OTPAccountRecord.self,
         ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: useInMemoryStore)
 
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
@@ -29,9 +33,18 @@ struct Glosc_2faApp: App {
     }()
 
     init() {
+        if Self.isRunningUITests {
+            AppPreferences.resetForTesting()
+            try? KeychainSecretStore.shared.removeAllSecrets()
+        }
+
         let preferences = AppPreferences()
         _preferences = StateObject(wrappedValue: preferences)
         _securityController = StateObject(wrappedValue: AppSecurityController(preferences: preferences))
+    }
+
+    private static var isRunningUITests: Bool {
+        ProcessInfo.processInfo.arguments.contains(uiTestingResetArgument)
     }
 
     var body: some Scene {
@@ -39,6 +52,8 @@ struct Glosc_2faApp: App {
             ContentView()
                 .environmentObject(preferences)
                 .environmentObject(securityController)
+                .environmentObject(copyFeedbackController)
+                .preferredColorScheme(preferences.appTheme.colorScheme)
         }
         .modelContainer(sharedModelContainer)
         .onChange(of: scenePhase, initial: true) { _, newPhase in

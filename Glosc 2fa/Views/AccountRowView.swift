@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct AccountRowView: View {
     @EnvironmentObject private var preferences: AppPreferences
     @EnvironmentObject private var securityController: AppSecurityController
+    @EnvironmentObject private var copyFeedbackController: CopyFeedbackController
 
     let account: OTPAccountRecord
 
@@ -34,6 +36,7 @@ struct AccountRowView: View {
                         .font(.system(.title3, design: .monospaced))
                         .fontWeight(.semibold)
                         .foregroundStyle(codeColor(at: context.date))
+                        .accessibilityIdentifier("accountCodeText")
 
                     if let remaining = OTPCodeGenerator.remainingSeconds(for: account, at: context.date) {
                         Label("\(remaining)s", systemImage: "timer")
@@ -47,6 +50,13 @@ struct AccountRowView: View {
                 }
             }
             .padding(.vertical, 4)
+            .contentShape(Rectangle())
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.6)
+                    .onEnded { _ in
+                        copyCode(at: context.date)
+                    }
+            )
         }
     }
 
@@ -64,5 +74,15 @@ struct AccountRowView: View {
         }
 
         return .orange
+    }
+
+    private func copyCode(at date: Date) {
+        guard let code = try? OTPCodeGenerator.generateCode(for: account, at: date) else {
+            return
+        }
+
+        UIPasteboard.general.string = code
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        copyFeedbackController.showSuccess()
     }
 }

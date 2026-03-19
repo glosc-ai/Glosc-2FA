@@ -10,10 +10,13 @@ import Foundation
 
 @MainActor
 final class AppPreferences: ObservableObject {
+    static let appIdentifier = "com.gloscai.com.Glosc-2fa"
+
     private enum Keys {
         static let requireBiometricUnlock = "preferences.requireBiometricUnlock"
         static let hideCodesInList = "preferences.hideCodesInList"
         static let showFullSecretInDetail = "preferences.showFullSecretInDetail"
+        static let appTheme = "preferences.appTheme"
     }
 
     @Published var requireBiometricUnlock: Bool {
@@ -26,6 +29,10 @@ final class AppPreferences: ObservableObject {
 
     @Published var showFullSecretInDetail: Bool {
         didSet { UserDefaults.standard.set(showFullSecretInDetail, forKey: Keys.showFullSecretInDetail) }
+    }
+
+    @Published var appTheme: AppTheme {
+        didSet { UserDefaults.standard.set(appTheme.rawValue, forKey: Keys.appTheme) }
     }
 
     init() {
@@ -42,5 +49,12 @@ final class AppPreferences: ObservableObject {
         } else {
             showFullSecretInDetail = UserDefaults.standard.bool(forKey: Keys.showFullSecretInDetail)
         }
+
+        appTheme = AppTheme(rawValue: UserDefaults.standard.string(forKey: Keys.appTheme) ?? "") ?? .system
+    }
+
+    static func resetForTesting() {
+        UserDefaults.standard.removePersistentDomain(forName: appIdentifier)
+        UserDefaults.standard.synchronize()
     }
 }

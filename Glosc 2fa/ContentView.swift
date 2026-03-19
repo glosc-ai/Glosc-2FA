@@ -12,6 +12,7 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var preferences: AppPreferences
     @EnvironmentObject private var securityController: AppSecurityController
+    @EnvironmentObject private var copyFeedbackController: CopyFeedbackController
 
     @Query private var accounts: [OTPAccountRecord]
 
@@ -97,24 +98,34 @@ struct ContentView: View {
                 migrateLegacySecretsIfNeeded()
             }
             .overlay {
-                if securityController.isLocked {
-                    AppLockView(
-                        errorMessage: securityController.errorMessage,
-                        canUseBiometrics: securityController.canUseBiometrics,
-                        isAuthenticating: securityController.isAuthenticating,
-                        onUnlock: {
-                            securityController.requestUnlock()
-                        },
-                        onDisableProtection: {
-                            preferences.requireBiometricUnlock = false
-                            securityController.disableProtection()
-                        }
-                    )
-                    .transition(.opacity)
-                    .zIndex(1)
+                ZStack(alignment: .top) {
+                    if let message = copyFeedbackController.message {
+                        CopySuccessToast(message: message)
+                            .padding(.top, 12)
+                            .transition(.move(edge: .top).combined(with: .opacity))
+                            .zIndex(1)
+                    }
+
+                    if securityController.isLocked {
+                        AppLockView(
+                            errorMessage: securityController.errorMessage,
+                            canUseBiometrics: securityController.canUseBiometrics,
+                            isAuthenticating: securityController.isAuthenticating,
+                            onUnlock: {
+                                securityController.requestUnlock()
+                            },
+                            onDisableProtection: {
+                                preferences.requireBiometricUnlock = false
+                                securityController.disableProtection()
+                            }
+                        )
+                        .transition(.opacity)
+                        .zIndex(2)
+                    }
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: securityController.isLocked)
+            .animation(.easeInOut(duration: 0.2), value: copyFeedbackController.message)
         }
     }
 
@@ -163,7 +174,25 @@ struct ContentView: View {
     }
 }
 
+private struct CopySuccessToast: View {
+    let message: String
+
+    var body: some View {
+        Label(message, systemImage: "checkmark.circle.fill")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(.green.gradient, in: Capsule())
+            .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
+            .accessibilityIdentifier("copySuccessToast")
+    }
+}
+
 #Preview {
     ContentView()
         .modelContainer(for: OTPAccountRecord.self, inMemory: true)
+        .environmentObject(AppPreferences())
+        .environmentObject(AppSecurityController(preferences: AppPreferences()))
+        .environmentObject(CopyFeedbackController())
 }
