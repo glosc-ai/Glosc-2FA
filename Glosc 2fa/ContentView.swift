@@ -12,7 +12,7 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var preferences: AppPreferences
     @EnvironmentObject private var securityController: AppSecurityController
-    @EnvironmentObject private var copyFeedbackController: CopyFeedbackController
+    @EnvironmentObject private var operationFeedbackController: OperationFeedbackController
 
     @Query private var accounts: [OTPAccountRecord]
 
@@ -99,8 +99,8 @@ struct ContentView: View {
             }
             .overlay {
                 ZStack(alignment: .top) {
-                    if let message = copyFeedbackController.message {
-                        CopySuccessToast(message: message)
+                    if let feedback = operationFeedbackController.currentFeedback {
+                        OperationFeedbackToastView(feedback: feedback)
                             .padding(.top, 12)
                             .transition(.move(edge: .top).combined(with: .opacity))
                             .zIndex(1)
@@ -109,6 +109,7 @@ struct ContentView: View {
                     if securityController.isLocked {
                         AppLockView(
                             errorMessage: securityController.errorMessage,
+                            canAuthenticateDeviceOwner: securityController.canAuthenticateDeviceOwner,
                             canUseBiometrics: securityController.canUseBiometrics,
                             isAuthenticating: securityController.isAuthenticating,
                             onUnlock: {
@@ -125,7 +126,7 @@ struct ContentView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: securityController.isLocked)
-            .animation(.easeInOut(duration: 0.2), value: copyFeedbackController.message)
+            .animation(.easeInOut(duration: 0.2), value: operationFeedbackController.currentFeedback)
         }
     }
 
@@ -138,6 +139,13 @@ struct ContentView: View {
         }
 
         try modelContext.save()
+
+        switch mode {
+        case .add:
+            operationFeedbackController.showSuccess(message: "账号添加成功")
+        case .edit:
+            operationFeedbackController.showSuccess(message: "账号更新成功")
+        }
     }
 
     private func deleteItems(offsets: IndexSet) {
@@ -149,6 +157,13 @@ struct ContentView: View {
 
             try? modelContext.save()
         }
+
+        let deletedCount = offsets.count
+        if deletedCount == 1 {
+            operationFeedbackController.showSuccess(message: "删除成功")
+        } else if deletedCount > 1 {
+            operationFeedbackController.showSuccess(message: "已删除 \(deletedCount) 个账号")
+        }
     }
 
     private func delete(_ account: OTPAccountRecord) {
@@ -157,6 +172,8 @@ struct ContentView: View {
             modelContext.delete(account)
             try? modelContext.save()
         }
+
+        operationFeedbackController.showSuccess(message: "删除成功")
     }
 
     private func migrateLegacySecretsIfNeeded() {
@@ -174,25 +191,10 @@ struct ContentView: View {
     }
 }
 
-private struct CopySuccessToast: View {
-    let message: String
-
-    var body: some View {
-        Label(message, systemImage: "checkmark.circle.fill")
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(.green.gradient, in: Capsule())
-            .shadow(color: .black.opacity(0.15), radius: 12, y: 6)
-            .accessibilityIdentifier("copySuccessToast")
-    }
-}
-
 #Preview {
     ContentView()
         .modelContainer(for: OTPAccountRecord.self, inMemory: true)
         .environmentObject(AppPreferences())
         .environmentObject(AppSecurityController(preferences: AppPreferences()))
-        .environmentObject(CopyFeedbackController())
+        .environmentObject(OperationFeedbackController())
 }

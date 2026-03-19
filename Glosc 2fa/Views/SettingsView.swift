@@ -10,6 +10,8 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var preferences: AppPreferences
+    @EnvironmentObject private var securityController: AppSecurityController
+    @EnvironmentObject private var operationFeedbackController: OperationFeedbackController
 
     var body: some View {
         NavigationStack {
@@ -29,14 +31,15 @@ struct SettingsView: View {
                 }
 
                 Section {
-                    Toggle("启用生物识别锁定", isOn: $preferences.requireBiometricUnlock)
+                    Toggle("启用身份验证锁定", isOn: biometricProtectionBinding)
                         .accessibilityIdentifier("requireBiometricUnlockToggle")
+                        .disabled(securityController.isAuthenticating)
                     Toggle("详情页显示完整共享密钥", isOn: $preferences.showFullSecretInDetail)
                         .accessibilityIdentifier("showFullSecretInDetailToggle")
                 } header: {
                     Text("安全")
                 } footer: {
-                    Text("启用后，应用回到前台时会尝试使用 Face ID 或 Touch ID 解锁。")
+                    Text("启用或关闭此开关前都会先验证身份。启用后，应用回到前台时会要求通过 Face ID、Touch ID 或设备密码完成解锁。")
                 }
 
                 Section {
@@ -58,12 +61,55 @@ struct SettingsView: View {
             }
             .navigationTitle("设置")
             .navigationBarTitleDisplayMode(.inline)
+            .overlay(alignment: .top) {
+                if let feedback = operationFeedbackController.currentFeedback {
+                    OperationFeedbackToastView(feedback: feedback)
+                        .padding(.top, 12)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("完成") {
                         dismiss()
                     }
                     .accessibilityIdentifier("closeSettingsButton")
+                }
+            }
+            .animation(.easeInOut(duration: 0.2), value: operationFeedbackController.currentFeedback)
+        }
+    }
+
+    private var biometricProtectionBinding: Binding<Bool> {
+        Binding(
+            get: { preferences.requireBiometricUnlock },
+            set: { newValue in
+                updateBiometricProtection(to: newValue)
+            }
+        )
+    }
+
+    private func updateBiometricProtection(to newValue: Bool) {
+        guard newValue != preferences.requireBiometricUnlock else {
+            return
+        }
+
+        if newValue {
+            securityController.enableProtection { result in
+                switch result {
+                case .success:
+                    operationFeedbackController.showSuccess(message: "已开启身份验证保护")
+                case let .failure(error):
+                    operationFeedbackController.showError(message: error.localizedDescription)
+                }
+            }
+        } else {
+            securityController.disableProtectionAfterAuthentication { result in
+                switch result {
+                case .success:
+                    operationFeedbackController.showSuccess(message: "已关闭身份验证保护")
+                case let .failure(error):
+                    operationFeedbackController.showError(message: error.localizedDescription)
                 }
             }
         }

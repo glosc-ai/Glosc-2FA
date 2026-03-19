@@ -11,6 +11,12 @@ import Testing
 
 struct Glosc_2faTests {
 
+    private struct MockAuthenticationError: LocalizedError {
+        var errorDescription: String? {
+            "身份验证失败"
+        }
+    }
+
     @Test func base32DecoderHandlesNormalizedInput() throws {
         let decoded = try Base32Decoder.decode("JBSW Y3DP-EHPK3PXP")
 
@@ -127,6 +133,48 @@ struct Glosc_2faTests {
         #expect(throws: KeychainSecretStoreError.secretNotFound) {
             try KeychainSecretStore.shared.loadSecret(for: key)
         }
+    }
+
+    @Test @MainActor func enablingProtectionRequiresSuccessfulAuthentication() {
+        AppPreferences.resetForTesting()
+        let preferences = AppPreferences()
+        var capturedReason: String?
+
+        let controller = AppSecurityController(
+            preferences: preferences,
+            canAuthenticateDeviceOwnerHandler: { true },
+            canUseBiometricsHandler: { true },
+            authenticationHandler: { reason, completion in
+                capturedReason = reason
+                completion(.success(()))
+            }
+        )
+
+        controller.enableProtection()
+
+        #expect(preferences.requireBiometricUnlock)
+        #expect(controller.isLocked == false)
+        #expect(capturedReason == "开启身份验证保护前，请先验证你本人身份")
+    }
+
+    @Test @MainActor func disablingProtectionKeepsLockEnabledWhenAuthenticationFails() {
+        AppPreferences.resetForTesting()
+        let preferences = AppPreferences()
+        preferences.requireBiometricUnlock = true
+
+        let controller = AppSecurityController(
+            preferences: preferences,
+            canAuthenticateDeviceOwnerHandler: { true },
+            canUseBiometricsHandler: { true },
+            authenticationHandler: { _, completion in
+                completion(.failure(MockAuthenticationError()))
+            }
+        )
+
+        controller.disableProtectionAfterAuthentication()
+
+        #expect(preferences.requireBiometricUnlock)
+        #expect(controller.errorMessage == "身份验证失败")
     }
 
 }

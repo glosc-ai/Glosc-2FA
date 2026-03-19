@@ -9,6 +9,7 @@ import SwiftUI
 
 struct AppLockView: View {
     let errorMessage: String?
+    let canAuthenticateDeviceOwner: Bool
     let canUseBiometrics: Bool
     let isAuthenticating: Bool
     let onUnlock: () -> Void
@@ -28,7 +29,7 @@ struct AppLockView: View {
                     .font(.title2)
                     .fontWeight(.semibold)
 
-                Text("需要通过生物识别解锁后，才能查看验证码与账号详情。")
+                Text("需要先完成设备身份验证后，才能查看验证码与账号详情。")
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
 
@@ -42,14 +43,14 @@ struct AppLockView: View {
                 Button {
                     onUnlock()
                 } label: {
-                    Label(isAuthenticating ? "验证中..." : "立即解锁", systemImage: canUseBiometrics ? "touchid" : "lock.open")
+                    Label(isAuthenticating ? "验证中..." : "验证身份", systemImage: canUseBiometrics ? "touchid" : "lock.open")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(isAuthenticating)
+                .disabled(isAuthenticating || !canAuthenticateDeviceOwner)
 
-                if !canUseBiometrics {
-                    Button("关闭生物识别锁定") {
+                if !canAuthenticateDeviceOwner {
+                    Button("关闭身份验证锁定") {
                         onDisableProtection()
                     }
                     .buttonStyle(.bordered)

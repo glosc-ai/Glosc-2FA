@@ -11,7 +11,7 @@ import UIKit
 struct AccountRowView: View {
     @EnvironmentObject private var preferences: AppPreferences
     @EnvironmentObject private var securityController: AppSecurityController
-    @EnvironmentObject private var copyFeedbackController: CopyFeedbackController
+    @EnvironmentObject private var operationFeedbackController: OperationFeedbackController
 
     let account: OTPAccountRecord
 
@@ -78,11 +78,12 @@ struct AccountRowView: View {
 
     private func copyCode(at date: Date) {
         guard let code = try? OTPCodeGenerator.generateCode(for: account, at: date) else {
+            operationFeedbackController.showError(message: "复制失败，当前验证码不可用")
             return
         }
 
         UIPasteboard.general.string = code
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        copyFeedbackController.showSuccess()
+        operationFeedbackController.showSuccess(message: "复制验证码成功")
     }
 }

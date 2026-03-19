@@ -16,7 +16,7 @@ struct Glosc_2faApp: App {
 
     @StateObject private var preferences: AppPreferences
     @StateObject private var securityController: AppSecurityController
-    @StateObject private var copyFeedbackController = CopyFeedbackController()
+    @StateObject private var operationFeedbackController = OperationFeedbackController()
 
     var sharedModelContainer: ModelContainer = {
         let useInMemoryStore = ProcessInfo.processInfo.arguments.contains(uiTestingResetArgument)
@@ -52,7 +52,7 @@ struct Glosc_2faApp: App {
             ContentView()
                 .environmentObject(preferences)
                 .environmentObject(securityController)
-                .environmentObject(copyFeedbackController)
+                .environmentObject(operationFeedbackController)
                 .preferredColorScheme(preferences.appTheme.colorScheme)
         }
         .modelContainer(sharedModelContainer)

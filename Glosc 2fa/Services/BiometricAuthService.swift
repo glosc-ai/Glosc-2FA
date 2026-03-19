@@ -23,22 +23,28 @@ enum BiometricAuthServiceError: LocalizedError {
 }
 
 enum BiometricAuthService {
+    static var canAuthenticateDeviceOwner: Bool {
+        let context = LAContext()
+        var error: NSError?
+        return context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error)
+    }
+
     static var canUseBiometrics: Bool {
         let context = LAContext()
         var error: NSError?
         return context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
     }
 
-    static func authenticate(reason: String, completion: @escaping (Result<Void, Error>) -> Void) {
+    static func authenticateDeviceOwner(reason: String, completion: @escaping (Result<Void, Error>) -> Void) {
         let context = LAContext()
         var error: NSError?
 
-        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
             completion(.failure(error ?? BiometricAuthServiceError.unavailable))
             return
         }
 
-        context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) { success, evaluationError in
+        context.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { success, evaluationError in
             DispatchQueue.main.async {
                 if success {
                     completion(.success(()))

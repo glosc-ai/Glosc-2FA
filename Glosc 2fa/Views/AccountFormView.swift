@@ -60,6 +60,7 @@ private enum AccountInputMode: String, CaseIterable, Identifiable {
 
 struct AccountFormView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var operationFeedbackController: OperationFeedbackController
 
     let mode: AccountFormMode
     let onSubmit: (OTPAccountDraft) throws -> Void
@@ -173,6 +174,13 @@ struct AccountFormView: View {
             }
             .navigationTitle(mode.title)
             .navigationBarTitleDisplayMode(.inline)
+            .overlay(alignment: .top) {
+                if let feedback = operationFeedbackController.currentFeedback {
+                    OperationFeedbackToastView(feedback: feedback)
+                        .padding(.top, 12)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("取消") {
@@ -200,6 +208,7 @@ struct AccountFormView: View {
             } message: {
                 Text(errorMessage ?? "")
             }
+            .animation(.easeInOut(duration: 0.2), value: operationFeedbackController.currentFeedback)
             .sheet(isPresented: $isScannerPresented) {
                 QRCodeScannerView { scannedValue in
                     importURI = scannedValue
@@ -214,8 +223,10 @@ struct AccountFormView: View {
     private func importFromURI() {
         do {
             draft = try OTPAuthURIParser.parse(importURI)
+            operationFeedbackController.showSuccess(message: "导入成功，已填充表单")
         } catch {
             errorMessage = error.localizedDescription
+            operationFeedbackController.showError(message: "导入失败")
         }
     }
 
@@ -225,6 +236,7 @@ struct AccountFormView: View {
             dismiss()
         } catch {
             errorMessage = error.localizedDescription
+            operationFeedbackController.showError(message: "保存失败")
         }
     }
 }
