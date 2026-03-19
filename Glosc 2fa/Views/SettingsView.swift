@@ -78,6 +78,7 @@ struct SettingsView: View {
             }
             .animation(.easeInOut(duration: 0.2), value: operationFeedbackController.currentFeedback)
         }
+        .preferredColorScheme(preferences.appTheme.colorScheme)
     }
 
     private var biometricProtectionBinding: Binding<Bool> {

@@ -25,35 +25,15 @@ struct AccountDetailView: View {
 
     var body: some View {
         ScrollView {
-            TimelineView(.periodic(from: .now, by: 1)) { context in
-                VStack(alignment: .leading, spacing: 24) {
-                    header(date: context.date)
-                    metadata
-
-                    if account.kind == .hotp {
-                        Button {
-                            account.counter = OTPCodeGenerator.nextCounter(afterUsing: account)
-                            account.updatedAt = .now
-                            try? modelContext.save()
-                        } label: {
-                            Label("标记当前 HOTP 已使用", systemImage: "arrow.triangle.2.circlepath")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.bordered)
-                        .accessibilityIdentifier("advanceHOTPButton")
-                    }
-
-                    Button {
-                        copyCode(at: context.date)
-                    } label: {
-                        Label(copied ? "已复制验证码" : "复制验证码", systemImage: copied ? "checkmark.circle.fill" : "doc.on.doc")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                .padding()
+            VStack(alignment: .leading, spacing: 20) {
+                codeCard
+                metadataCard
+                actionSection
             }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 20)
         }
+        .scrollBounceBehavior(.basedOnSize)
         .navigationTitle(account.displayName)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -72,69 +52,109 @@ struct AccountDetailView: View {
         }
     }
 
-    @ViewBuilder
-    private func header(date: Date) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            if !account.displayIssuer.isEmpty {
-                Text(account.displayIssuer)
-                    .font(.headline)
-                    .foregroundStyle(.secondary)
-            }
-
-            Text((try? OTPCodeGenerator.generateCode(for: account, at: date)) ?? "------")
-                .font(.system(size: 42, weight: .bold, design: .monospaced))
-                .minimumScaleFactor(0.6)
-                .accessibilityIdentifier("detailCodeText")
-
-            if let remaining = OTPCodeGenerator.remainingSeconds(for: account, at: date),
-               let progress = OTPCodeGenerator.progress(for: account, at: date) {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Label("剩余 \(remaining) 秒", systemImage: "timer")
-                        Spacer()
-                        Text("每 \(account.period) 秒更新")
-                            .foregroundStyle(.secondary)
-                    }
-                    .font(.subheadline)
-
-                    ProgressView(value: progress)
-                        .tint(progress > 0.75 ? .orange : .accentColor)
+    private var codeCard: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            VStack(alignment: .leading, spacing: 16) {
+                if !account.displayIssuer.isEmpty {
+                    Text(account.displayIssuer)
+                        .font(.headline)
+                        .foregroundStyle(.secondary)
                 }
-            } else {
-                Text("当前计数器：\(account.counter)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                    .accessibilityIdentifier("hotpCounterValue")
+
+                Text((try? OTPCodeGenerator.generateCode(for: account, at: context.date)) ?? "------")
+                    .font(.system(size: 42, weight: .bold, design: .monospaced))
+                    .minimumScaleFactor(0.55)
+                    .lineLimit(1)
+                    .accessibilityIdentifier("detailCodeText")
+
+                if let remaining = OTPCodeGenerator.remainingSeconds(for: account, at: context.date),
+                   let progress = OTPCodeGenerator.progress(for: account, at: context.date) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(alignment: .firstTextBaseline) {
+                            Label("剩余 \(remaining) 秒", systemImage: "timer")
+                            Spacer(minLength: 12)
+                            Text("每 \(account.period) 秒更新")
+                                .foregroundStyle(.secondary)
+                        }
+                        .font(.subheadline)
+
+                        ProgressView(value: progress)
+                            .tint(progress > 0.75 ? .orange : .accentColor)
+                    }
+                } else {
+                    Text("当前计数器：\(account.counter)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .accessibilityIdentifier("hotpCounterValue")
+                }
             }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding()
-        .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .onTapGesture {
-            copyCode(at: date)
-        }
-        .onLongPressGesture {
-            copyCode(at: date)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(20)
+            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+            .onTapGesture {
+                copyCode(at: context.date)
+            }
+            .onLongPressGesture {
+                copyCode(at: context.date)
+            }
         }
     }
 
-    private var metadata: some View {
+    private var metadataCard: some View {
         VStack(alignment: .leading, spacing: 16) {
-            DetailRow(label: "账号名称", value: account.displayName)
-            DetailRow(label: "OTP 类型", value: account.kind.title)
-            DetailRow(label: "算法", value: account.algorithm.rawValue)
-            DetailRow(label: "位数", value: "\(account.digits)")
-            DetailRow(label: "时间步长", value: account.kind == .totp ? "\(account.period) 秒" : "不适用")
-            DetailRow(label: "计数器", value: account.kind == .hotp ? "\(account.counter)" : "不适用")
-            DetailRow(
-                label: "共享密钥",
-                value: preferences.showFullSecretInDetail ? account.secret : account.secretPreview,
-                valueAccessibilityIdentifier: "secretValueText"
-            )
+            Text("账号信息")
+                .font(.headline)
+
+            VStack(alignment: .leading, spacing: 14) {
+                DetailRow(label: "账号名称", value: account.displayName)
+
+                if !account.displayIssuer.isEmpty {
+                    DetailRow(label: "签发方", value: account.displayIssuer)
+                }
+
+                DetailRow(label: "OTP 类型", value: account.kind.title)
+                DetailRow(label: "算法", value: account.algorithm.rawValue)
+                DetailRow(label: "位数", value: "\(account.digits)")
+                DetailRow(label: "时间步长", value: account.kind == .totp ? "\(account.period) 秒" : "不适用")
+                DetailRow(label: "计数器", value: account.kind == .hotp ? "\(account.counter)" : "不适用")
+                DetailRow(
+                    label: "共享密钥",
+                    value: preferences.showFullSecretInDetail ? account.secret : account.secretPreview,
+                    valueAccessibilityIdentifier: "secretValueText",
+                    usesMonospacedValue: true
+                )
+            }
         }
-        .padding()
+        .padding(20)
         .background(Color(uiColor: .secondarySystemBackground), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    private var actionSection: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            VStack(spacing: 12) {
+                Button {
+                    copyCode(at: context.date)
+                } label: {
+                    Label(copied ? "已复制验证码" : "复制验证码", systemImage: copied ? "checkmark.circle.fill" : "doc.on.doc")
+                        .frame(maxWidth: .infinity)
+                }
+                .buttonStyle(.borderedProminent)
+
+                if account.kind == .hotp {
+                    Button {
+                        account.counter = OTPCodeGenerator.nextCounter(afterUsing: account)
+                        account.updatedAt = .now
+                        try? modelContext.save()
+                    } label: {
+                        Label("标记当前 HOTP 已使用", systemImage: "arrow.triangle.2.circlepath")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .accessibilityIdentifier("advanceHOTPButton")
+                }
+            }
+        }
     }
 
     private func copyCode(at date: Date) {
@@ -161,15 +181,19 @@ private struct DetailRow: View {
     let label: String
     let value: String
     var valueAccessibilityIdentifier: String?
+    var usesMonospacedValue = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        HStack(alignment: .top, spacing: 12) {
             Text(label)
                 .font(.caption)
                 .foregroundStyle(.secondary)
+                .frame(width: 72, alignment: .leading)
 
             Text(value)
-                .font(.body)
+                .font(usesMonospacedValue ? .system(.body, design: .monospaced) : .body)
+                .multilineTextAlignment(.trailing)
+                .frame(maxWidth: .infinity, alignment: .trailing)
                 .textSelection(.enabled)
                 .accessibilityIdentifier(valueAccessibilityIdentifier ?? "")
         }

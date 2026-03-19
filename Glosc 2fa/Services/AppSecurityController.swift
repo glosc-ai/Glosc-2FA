@@ -21,6 +21,7 @@ final class AppSecurityController: ObservableObject {
     private let canAuthenticateDeviceOwnerHandler: AvailabilityHandler
     private let canUseBiometricsHandler: AvailabilityHandler
     private let authenticationHandler: AuthenticationHandler
+    private var shouldRequestUnlockOnNextActive: Bool
 
     init(
         preferences: AppPreferences,
@@ -33,6 +34,7 @@ final class AppSecurityController: ObservableObject {
         self.canUseBiometricsHandler = canUseBiometricsHandler ?? { BiometricAuthService.canUseBiometrics }
         self.authenticationHandler = authenticationHandler ?? BiometricAuthService.authenticateDeviceOwner
         self.isLocked = preferences.requireBiometricUnlock
+        self.shouldRequestUnlockOnNextActive = preferences.requireBiometricUnlock
     }
 
     var canAuthenticateDeviceOwner: Bool {
@@ -45,17 +47,27 @@ final class AppSecurityController: ObservableObject {
 
     func handleScenePhase(_ scenePhase: ScenePhase) {
         switch scenePhase {
-        case .background, .inactive:
+        case .background:
             if preferences.requireBiometricUnlock {
                 isLocked = true
+                shouldRequestUnlockOnNextActive = true
             }
+        case .inactive:
+            break
         case .active:
-            if preferences.requireBiometricUnlock {
-                isLocked = true
-                requestUnlock()
-            } else {
+            guard preferences.requireBiometricUnlock else {
                 isLocked = false
+                shouldRequestUnlockOnNextActive = false
+                return
             }
+
+            guard shouldRequestUnlockOnNextActive else {
+                return
+            }
+
+            isLocked = true
+            shouldRequestUnlockOnNextActive = false
+            requestUnlock()
         @unknown default:
             break
         }
@@ -75,6 +87,7 @@ final class AppSecurityController: ObservableObject {
             switch result {
             case .success:
                 self.isLocked = false
+                self.shouldRequestUnlockOnNextActive = false
             case .failure:
                 self.isLocked = true
             }
@@ -91,9 +104,11 @@ final class AppSecurityController: ObservableObject {
             case .success:
                 self.preferences.requireBiometricUnlock = true
                 self.isLocked = false
+                self.shouldRequestUnlockOnNextActive = false
             case .failure:
                 self.preferences.requireBiometricUnlock = false
                 self.isLocked = false
+                self.shouldRequestUnlockOnNextActive = false
             }
 
             completion?(result)
@@ -110,6 +125,7 @@ final class AppSecurityController: ObservableObject {
             case .success:
                 self.preferences.requireBiometricUnlock = false
                 self.isLocked = false
+                self.shouldRequestUnlockOnNextActive = false
             case .failure:
                 self.preferences.requireBiometricUnlock = true
             }
@@ -122,6 +138,7 @@ final class AppSecurityController: ObservableObject {
         isLocked = false
         errorMessage = nil
         preferences.requireBiometricUnlock = false
+        shouldRequestUnlockOnNextActive = false
     }
 
     private func authenticate(reason: String, completion: @escaping (Result<Void, Error>) -> Void) {

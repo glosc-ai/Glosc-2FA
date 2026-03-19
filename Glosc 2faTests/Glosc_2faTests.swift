@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 import Testing
 @testable import Glosc_2fa
 
@@ -175,6 +176,54 @@ struct Glosc_2faTests {
 
         #expect(preferences.requireBiometricUnlock)
         #expect(controller.errorMessage == "身份验证失败")
+    }
+
+    @Test @MainActor func activePhaseDoesNotRetryUnlockAfterInactiveBounce() {
+        AppPreferences.resetForTesting()
+        let preferences = AppPreferences()
+        preferences.requireBiometricUnlock = true
+        var authenticationCount = 0
+
+        let controller = AppSecurityController(
+            preferences: preferences,
+            canAuthenticateDeviceOwnerHandler: { true },
+            canUseBiometricsHandler: { true },
+            authenticationHandler: { _, completion in
+                authenticationCount += 1
+                completion(.success(()))
+            }
+        )
+
+        controller.handleScenePhase(.active)
+        controller.handleScenePhase(.inactive)
+        controller.handleScenePhase(.active)
+
+        #expect(authenticationCount == 1)
+        #expect(controller.isLocked == false)
+    }
+
+    @Test @MainActor func backgroundThenActiveRequestsUnlockAgain() {
+        AppPreferences.resetForTesting()
+        let preferences = AppPreferences()
+        preferences.requireBiometricUnlock = true
+        var authenticationCount = 0
+
+        let controller = AppSecurityController(
+            preferences: preferences,
+            canAuthenticateDeviceOwnerHandler: { true },
+            canUseBiometricsHandler: { true },
+            authenticationHandler: { _, completion in
+                authenticationCount += 1
+                completion(.success(()))
+            }
+        )
+
+        controller.handleScenePhase(.active)
+        controller.handleScenePhase(.background)
+        controller.handleScenePhase(.active)
+
+        #expect(authenticationCount == 2)
+        #expect(controller.isLocked == false)
     }
 
 }
