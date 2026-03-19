@@ -23,12 +23,29 @@ final class Glosc_2faUITests: XCTestCase {
     }
 
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
+    func testAddAccountFlow() throws {
         let app = XCUIApplication()
         app.launch()
 
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+        app.buttons["emptyAddAccountButton"].tap()
+
+        let issuerField = app.textFields["issuerTextField"]
+        XCTAssertTrue(issuerField.waitForExistence(timeout: 2))
+        issuerField.tap()
+        issuerField.typeText("GitHub")
+
+        let accountField = app.textFields["accountNameTextField"]
+        accountField.tap()
+        accountField.typeText("alice@example.com")
+
+        let secretField = app.textFields["secretTextField"]
+        secretField.tap()
+        secretField.typeText("JBSWY3DPEHPK3PXP")
+
+        app.buttons["saveAccountButton"].tap()
+
+        XCTAssertTrue(app.staticTexts["alice@example.com"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["GitHub"].exists)
     }
 
     @MainActor

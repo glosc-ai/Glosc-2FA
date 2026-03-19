@@ -10,9 +10,14 @@ import SwiftData
 
 @main
 struct Glosc_2faApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+
+    @StateObject private var preferences: AppPreferences
+    @StateObject private var securityController: AppSecurityController
+
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            OTPAccountRecord.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -23,10 +28,21 @@ struct Glosc_2faApp: App {
         }
     }()
 
+    init() {
+        let preferences = AppPreferences()
+        _preferences = StateObject(wrappedValue: preferences)
+        _securityController = StateObject(wrappedValue: AppSecurityController(preferences: preferences))
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(preferences)
+                .environmentObject(securityController)
         }
         .modelContainer(sharedModelContainer)
+        .onChange(of: scenePhase, initial: true) { _, newPhase in
+            securityController.handleScenePhase(newPhase)
+        }
     }
 }
