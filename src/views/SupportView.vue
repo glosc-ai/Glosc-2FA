@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { RouterLink } from 'vue-router'
+
 const supportEmail = 'xm@aoe.top'
 
 const terms = [
@@ -75,6 +77,9 @@ const terms = [
           <p class="mt-2">
             本页内容用于官网展示与基础告知，后续如增加隐私政策、完整用户协议或数据同步功能，将同步更新条款内容与版本说明。
           </p>
+          <RouterLink to="/privacy" class="mt-4 inline-flex text-text-primary transition hover:text-white">
+            查看完整隐私政策
+          </RouterLink>
         </div>
       </article>
     </section>

@@ -5,6 +5,7 @@ const navigation = [
   { to: '/', label: '首页' },
   { to: '/download', label: '下载' },
   { to: '/support', label: '技术支持 / 协议条款' },
+  { to: '/privacy', label: '隐私政策' },
 ]
 
 const appStorePlaceholder = 'https://apps.apple.com/app/id0000000000'
