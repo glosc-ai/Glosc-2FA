@@ -120,6 +120,3 @@ xcodebuild -project "Glosc 2fa.xcodeproj" -scheme "Glosc 2fa" -destination 'plat
 - 开发文档：docs/development.md
 - 代理协作说明：AGENTS.md
 
-
-
-11
