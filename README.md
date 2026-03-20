@@ -1,6 +1,6 @@
-# Glosc 2FA
+# Glosc Authenticator
 
-Glosc 2FA 是一款面向 Apple 平台的双重验证工具，目标是提供简洁、安全、可靠的验证码管理体验。
+Glosc Authenticator 是一款面向 Apple 平台的双重验证(Authenticator)工具，目标是提供简洁、安全、可靠的验证码管理体验。
 
 当前仓库已经完成一个可运行的 iOS / iPadOS MVP：支持本地管理 OTP 账号、生成验证码，并覆盖最小主流程测试。本文档将产品目标、当前状态与后续开发方向分开说明，避免文档和代码状态不一致。
 
