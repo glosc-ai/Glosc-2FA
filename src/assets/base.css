@@ -27,9 +27,8 @@ body {
   margin: 0;
   color: var(--text-primary);
   background:
-    radial-gradient(circle at top, rgba(54, 88, 171, 0.28), transparent 32%),
-    radial-gradient(circle at 80% 10%, rgba(122, 92, 255, 0.12), transparent 20%),
-    linear-gradient(180deg, #08111f 0%, #050816 45%, #03050f 100%);
+    radial-gradient(circle at top, rgba(66, 90, 160, 0.16), transparent 24%),
+    linear-gradient(180deg, #040404 0%, #050505 38%, #020202 100%);
   line-height: 1.6;
   font-family:
     'SF Pro Display',

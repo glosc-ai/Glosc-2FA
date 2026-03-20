@@ -51,7 +51,7 @@
   }
 
   .button-primary {
-    @apply inline-flex items-center justify-center rounded-full bg-text-primary px-5 py-3 text-sm font-medium text-slate-950 transition hover:bg-white;
+    @apply inline-flex items-center justify-center bg-accent rounded-full px-5 py-3 text-sm font-medium text-text-primary transition ;
   }
 
   .button-secondary {

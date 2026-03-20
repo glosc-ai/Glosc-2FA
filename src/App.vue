@@ -17,12 +17,14 @@ const appStorePlaceholder = 'https://apps.apple.com/app/id0000000000'
     <header class="sticky top-0 z-20 border-b border-white/8 bg-slate-950/65 backdrop-blur-xl">
       <div class="shell flex items-center justify-between gap-4 py-4">
         <RouterLink to="/" class="flex items-center gap-3">
-          <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/6 text-lg font-semibold text-white shadow-[0_12px_30px_rgba(0,0,0,0.25)]">
-            G
-          </div>
+          <img
+            src="/icon.png"
+            alt="Glosc 2FA icon"
+            class="h-11 w-11 rounded-2xl object-cover shadow-[0_12px_30px_rgba(0,0,0,0.25)]"
+          >
           <div>
             <p class="font-display text-sm uppercase tracking-[0.24em] text-text-muted">Glosc</p>
-            <p class="font-display text-lg font-semibold tracking-tight text-text-primary">Authenticator</p>
+            <p class="font-display text-lg font-semibold tracking-tight text-text-primary">2FA</p>
           </div>
         </RouterLink>
 
@@ -65,7 +67,7 @@ const appStorePlaceholder = 'https://apps.apple.com/app/id0000000000'
     <footer class="border-t border-white/8 bg-black/30 py-10">
       <div class="shell flex flex-col gap-6 text-sm text-text-secondary md:flex-row md:items-end md:justify-between">
         <div>
-          <p class="font-display text-base font-medium text-text-primary">Glosc Authenticator</p>
+          <p class="font-display text-base font-medium text-text-primary">Glosc 2FA</p>
           <p class="mt-2 max-w-xl leading-7 text-text-secondary">
             面向 Apple 平台的双重验证工具，强调简洁、安全与可靠的验证码管理体验。
           </p>
