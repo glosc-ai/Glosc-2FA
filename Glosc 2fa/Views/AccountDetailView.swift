@@ -38,12 +38,12 @@ struct AccountDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
-                Button("编辑") {
+                Button(L10n.tr("common.edit", default: "编辑")) {
                     onEdit()
                 }
                 .accessibilityIdentifier("editAccountButton")
 
-                Button("删除", role: .destructive) {
+                Button(L10n.tr("common.delete", default: "删除"), role: .destructive) {
                     onDelete()
                     dismiss()
                 }
@@ -71,9 +71,9 @@ struct AccountDetailView: View {
                    let progress = OTPCodeGenerator.progress(for: account, at: context.date) {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(alignment: .firstTextBaseline) {
-                            Label("剩余 \(remaining) 秒", systemImage: "timer")
+                            Label(L10n.format("account.detail.remaining", default: "剩余 %d 秒", remaining), systemImage: "timer")
                             Spacer(minLength: 12)
-                            Text("每 \(account.period) 秒更新")
+                            Text(L10n.format("account.detail.period_update", default: "每 %d 秒更新", account.period))
                                 .foregroundStyle(.secondary)
                         }
                         .font(.subheadline)
@@ -82,7 +82,7 @@ struct AccountDetailView: View {
                             .tint(progress > 0.75 ? .orange : .accentColor)
                     }
                 } else {
-                    Text("当前计数器：\(account.counter)")
+                    Text(L10n.format("account.detail.current_counter", default: "当前计数器：%d", account.counter))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("hotpCounterValue")
@@ -103,23 +103,23 @@ struct AccountDetailView: View {
 
     private var metadataCard: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("账号信息")
+            Text(L10n.tr("account.detail.section", default: "账号信息"))
                 .font(.headline)
 
             VStack(alignment: .leading, spacing: 14) {
-                DetailRow(label: "账号名称", value: account.displayName)
+                DetailRow(label: L10n.tr("account.detail.name", default: "账号名称"), value: account.displayName)
 
                 if !account.displayIssuer.isEmpty {
-                    DetailRow(label: "签发方", value: account.displayIssuer)
+                    DetailRow(label: L10n.tr("account.detail.issuer", default: "签发方"), value: account.displayIssuer)
                 }
 
-                DetailRow(label: "OTP 类型", value: account.kind.title)
-                DetailRow(label: "算法", value: account.algorithm.rawValue)
-                DetailRow(label: "位数", value: "\(account.digits)")
-                DetailRow(label: "时间步长", value: account.kind == .totp ? "\(account.period) 秒" : "不适用")
-                DetailRow(label: "计数器", value: account.kind == .hotp ? "\(account.counter)" : "不适用")
+                DetailRow(label: L10n.tr("account.detail.kind", default: "OTP 类型"), value: account.kind.title)
+                DetailRow(label: L10n.tr("account.detail.algorithm", default: "算法"), value: account.algorithm.rawValue)
+                DetailRow(label: L10n.tr("account.detail.digits", default: "位数"), value: "\(account.digits)")
+                DetailRow(label: L10n.tr("account.detail.period", default: "时间步长"), value: account.kind == .totp ? L10n.format("account.detail.seconds_value", default: "%d 秒", account.period) : L10n.tr("common.not_applicable", default: "不适用"))
+                DetailRow(label: L10n.tr("account.detail.counter", default: "计数器"), value: account.kind == .hotp ? "\(account.counter)" : L10n.tr("common.not_applicable", default: "不适用"))
                 DetailRow(
-                    label: "共享密钥",
+                    label: L10n.tr("account.detail.secret", default: "共享密钥"),
                     value: preferences.showFullSecretInDetail ? account.secret : account.secretPreview,
                     valueAccessibilityIdentifier: "secretValueText",
                     usesMonospacedValue: true
@@ -136,7 +136,7 @@ struct AccountDetailView: View {
                 Button {
                     copyCode(at: context.date)
                 } label: {
-                    Label(copied ? "已复制验证码" : "复制验证码", systemImage: copied ? "checkmark.circle.fill" : "doc.on.doc")
+                    Label(copied ? L10n.tr("feedback.code.copied", default: "已复制验证码") : L10n.tr("account.detail.copy_code", default: "复制验证码"), systemImage: copied ? "checkmark.circle.fill" : "doc.on.doc")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
@@ -147,7 +147,7 @@ struct AccountDetailView: View {
                         account.updatedAt = .now
                         try? modelContext.save()
                     } label: {
-                        Label("标记当前 HOTP 已使用", systemImage: "arrow.triangle.2.circlepath")
+                        Label(L10n.tr("account.detail.advance_hotp", default: "标记当前 HOTP 已使用"), systemImage: "arrow.triangle.2.circlepath")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
@@ -159,13 +159,13 @@ struct AccountDetailView: View {
 
     private func copyCode(at date: Date) {
         guard let code = try? OTPCodeGenerator.generateCode(for: account, at: date) else {
-            operationFeedbackController.showError(message: "复制失败，当前验证码不可用")
+            operationFeedbackController.showError(message: L10n.tr("feedback.code.copy_failed", default: "复制失败，当前验证码不可用"))
             return
         }
 
         UIPasteboard.general.string = code
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        operationFeedbackController.showSuccess(message: "复制验证码成功")
+        operationFeedbackController.showSuccess(message: L10n.tr("feedback.code.copy_success", default: "复制验证码成功"))
         copied = true
         resetCopiedTask?.cancel()
         resetCopiedTask = Task {

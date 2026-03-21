@@ -16,11 +16,11 @@ enum KeychainSecretStoreError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .invalidSecretData:
-            return "密钥数据无法写入或读取。"
+            return L10n.tr("keychain.invalid_data", default: "密钥数据无法写入或读取。")
         case .secretNotFound:
-            return "未找到对应的安全密钥。"
+            return L10n.tr("keychain.not_found", default: "未找到对应的安全密钥。")
         case let .unexpectedStatus(status):
-            return "Keychain 操作失败，状态码：\(status)。"
+            return L10n.format("keychain.unexpected_status", default: "Keychain 操作失败，状态码：%d。", status)
         }
     }
 }

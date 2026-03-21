@@ -20,21 +20,21 @@ enum OTPAuthURIParserError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .invalidScheme:
-            return "只支持 otpauth:// 链接。"
+            return L10n.tr("parser.invalid_scheme", default: "只支持 otpauth:// 链接。")
         case .invalidKind:
-            return "链接中的 OTP 类型无效。"
+            return L10n.tr("parser.invalid_kind", default: "链接中的 OTP 类型无效。")
         case .missingSecret:
-            return "otpauth 链接缺少 secret 参数。"
+            return L10n.tr("parser.missing_secret", default: "otpauth 链接缺少 secret 参数。")
         case .invalidLabel:
-            return "otpauth 链接缺少可识别的账号标签。"
+            return L10n.tr("parser.invalid_label", default: "otpauth 链接缺少可识别的账号标签。")
         case .invalidDigits:
-            return "otpauth 链接中的 digits 参数无效。"
+            return L10n.tr("parser.invalid_digits", default: "otpauth 链接中的 digits 参数无效。")
         case .invalidPeriod:
-            return "otpauth 链接中的 period 参数无效。"
+            return L10n.tr("parser.invalid_period", default: "otpauth 链接中的 period 参数无效。")
         case .invalidCounter:
-            return "otpauth 链接中的 counter 参数无效。"
+            return L10n.tr("parser.invalid_counter", default: "otpauth 链接中的 counter 参数无效。")
         case let .unsupportedAlgorithm(value):
-            return "暂不支持算法 \(value)。"
+            return L10n.format("parser.unsupported_algorithm", default: "暂不支持算法 %@。", value)
         }
     }
 }

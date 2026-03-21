@@ -7,6 +7,7 @@
 
 import AVFoundation
 import SwiftUI
+import UIKit
 
 struct QRCodeScannerView: View {
     @Environment(\.dismiss) private var dismiss
@@ -27,22 +28,22 @@ struct QRCodeScannerView: View {
                     .ignoresSafeArea(edges: .bottom)
                 } else {
                     ContentUnavailableView {
-                        Label("当前设备无可用摄像头", systemImage: "camera.slash")
+                        Label(L10n.tr("scanner.unavailable.title", default: "当前设备无可用摄像头"), systemImage: "camera.slash")
                     } description: {
-                        Text("请在真机上使用二维码扫描，或返回上一页改用链接导入。")
+                        Text(L10n.tr("scanner.unavailable.description", default: "请在真机上使用二维码扫描，或返回上一页改用链接导入。"))
                     }
                 }
             }
-            .navigationTitle("扫描二维码")
+            .navigationTitle(L10n.tr("scanner.title", default: "扫描二维码"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("关闭") {
+                    Button(L10n.tr("common.close", default: "关闭")) {
                         dismiss()
                     }
                 }
             }
-            .alert("扫描失败", isPresented: Binding(
+            .alert(L10n.tr("scanner.failed_title", default: "扫描失败"), isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { isPresented in
                     if !isPresented {
@@ -50,7 +51,7 @@ struct QRCodeScannerView: View {
                     }
                 }
             )) {
-                Button("知道了", role: .cancel) {}
+                Button(L10n.tr("common.ok", default: "知道了"), role: .cancel) {}
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -170,11 +171,11 @@ private enum QRCodeScannerError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .cameraUnavailable:
-            return "当前设备没有可用摄像头。"
+            return L10n.tr("scanner.error.camera_unavailable", default: "当前设备没有可用摄像头。")
         case .cameraAccessDenied:
-            return "没有摄像头权限，无法扫描二维码。"
+            return L10n.tr("scanner.error.camera_denied", default: "没有摄像头权限，无法扫描二维码。")
         case .configurationFailed:
-            return "二维码扫描器初始化失败。"
+            return L10n.tr("scanner.error.configuration_failed", default: "二维码扫描器初始化失败。")
         }
     }
 }

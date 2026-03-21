@@ -10,11 +10,28 @@ import SwiftUI
 import Testing
 @testable import Glosc_2fa
 
+@Suite(.serialized)
 struct Glosc_2faTests {
+
+    private func withAppLanguage<T>(_ language: AppLanguage, perform: () throws -> T) rethrows -> T {
+        let defaults = UserDefaults.standard
+        let originalValue = defaults.string(forKey: AppPreferences.appLanguageDefaultsKey)
+
+        defaults.set(language.rawValue, forKey: AppPreferences.appLanguageDefaultsKey)
+        defer {
+            if let originalValue {
+                defaults.set(originalValue, forKey: AppPreferences.appLanguageDefaultsKey)
+            } else {
+                defaults.removeObject(forKey: AppPreferences.appLanguageDefaultsKey)
+            }
+        }
+
+        return try perform()
+    }
 
     private struct MockAuthenticationError: LocalizedError {
         var errorDescription: String? {
-            "身份验证失败"
+            L10n.tr("test.mock_auth_failed", default: "身份验证失败")
         }
     }
 
@@ -136,6 +153,30 @@ struct Glosc_2faTests {
         }
     }
 
+    @Test @MainActor func appLanguagePreferencePersistsSelectedLanguage() {
+        AppPreferences.resetForTesting()
+
+        let preferences = AppPreferences()
+        preferences.appLanguage = .english
+
+        let reloadedPreferences = AppPreferences()
+        #expect(reloadedPreferences.appLanguage == .english)
+    }
+
+    @Test func localizationUsesSelectedAppLanguage() throws {
+        try withAppLanguage(.english) {
+            #expect(L10n.tr("settings.title", default: "设置") == "Settings")
+        }
+
+        try withAppLanguage(.simplifiedChinese) {
+            #expect(L10n.tr("settings.title", default: "Settings") == "设置")
+        }
+
+        try withAppLanguage(.korean) {
+            #expect(L10n.tr("settings.title", default: "Settings") == "설정")
+        }
+    }
+
     @Test @MainActor func enablingProtectionRequiresSuccessfulAuthentication() {
         AppPreferences.resetForTesting()
         let preferences = AppPreferences()
@@ -155,7 +196,7 @@ struct Glosc_2faTests {
 
         #expect(preferences.requireBiometricUnlock)
         #expect(controller.isLocked == false)
-        #expect(capturedReason == "开启身份验证保护前，请先验证你本人身份")
+        #expect(capturedReason == L10n.tr("security.enable.reason", default: "开启身份验证保护前，请先验证你本人身份"))
     }
 
     @Test @MainActor func disablingProtectionKeepsLockEnabledWhenAuthenticationFails() {
@@ -175,7 +216,7 @@ struct Glosc_2faTests {
         controller.disableProtectionAfterAuthentication()
 
         #expect(preferences.requireBiometricUnlock)
-        #expect(controller.errorMessage == "身份验证失败")
+        #expect(controller.errorMessage == L10n.tr("test.mock_auth_failed", default: "身份验证失败"))
     }
 
     @Test @MainActor func activePhaseDoesNotRetryUnlockAfterInactiveBounce() {

@@ -15,9 +15,9 @@ enum BiometricAuthServiceError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .unavailable:
-            return "当前设备不可用生物识别。"
+            return L10n.tr("biometric.error.unavailable", default: "当前设备不可用生物识别。")
         case .failed:
-            return "生物识别验证失败。"
+            return L10n.tr("biometric.error.failed", default: "生物识别验证失败。")
         }
     }
 }

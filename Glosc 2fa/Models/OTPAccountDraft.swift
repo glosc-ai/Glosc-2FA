@@ -87,17 +87,17 @@ enum OTPAccountValidationError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .missingAccountName:
-            return "请输入账号名称。"
+            return L10n.tr("validation.missing_account_name", default: "请输入账号名称。")
         case .missingSecret:
-            return "请输入共享密钥。"
+            return L10n.tr("validation.missing_secret", default: "请输入共享密钥。")
         case .invalidDigits:
-            return "验证码位数目前支持 6 到 8 位。"
+            return L10n.tr("validation.invalid_digits", default: "验证码位数目前支持 6 到 8 位。")
         case .invalidPeriod:
-            return "时间步长必须大于 0 秒。"
+            return L10n.tr("validation.invalid_period", default: "时间步长必须大于 0 秒。")
         case .invalidCounter:
-            return "HOTP 计数器不能为负数。"
+            return L10n.tr("validation.invalid_counter", default: "HOTP 计数器不能为负数。")
         case .invalidSecret:
-            return "共享密钥不是有效的 Base32 内容。"
+            return L10n.tr("validation.invalid_secret", default: "共享密钥不是有效的 Base32 内容。")
         }
     }
 }

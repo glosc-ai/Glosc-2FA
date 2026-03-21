@@ -17,11 +17,11 @@ enum AppTheme: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .system:
-            return "跟随系统"
+            return L10n.tr("theme.system", default: "跟随系统")
         case .light:
-            return "浅色"
+            return L10n.tr("theme.light", default: "浅色")
         case .dark:
-            return "深色"
+            return L10n.tr("theme.dark", default: "深色")
         }
     }
 

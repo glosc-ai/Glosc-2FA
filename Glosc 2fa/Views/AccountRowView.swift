@@ -39,11 +39,11 @@ struct AccountRowView: View {
                         .accessibilityIdentifier("accountCodeText")
 
                     if let remaining = OTPCodeGenerator.remainingSeconds(for: account, at: context.date) {
-                        Label("\(remaining)s", systemImage: "timer")
+                        Label(L10n.format("account.row.remaining_short", default: "%ds", remaining), systemImage: "timer")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     } else {
-                        Text("HOTP")
+                        Text(L10n.tr("otp.kind.hotp", default: "HOTP"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -78,12 +78,12 @@ struct AccountRowView: View {
 
     private func copyCode(at date: Date) {
         guard let code = try? OTPCodeGenerator.generateCode(for: account, at: date) else {
-            operationFeedbackController.showError(message: "复制失败，当前验证码不可用")
+            operationFeedbackController.showError(message: L10n.tr("feedback.code.copy_failed", default: "复制失败，当前验证码不可用"))
             return
         }
 
         UIPasteboard.general.string = code
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        operationFeedbackController.showSuccess(message: "复制验证码成功")
+        operationFeedbackController.showSuccess(message: L10n.tr("feedback.code.copy_success", default: "复制验证码成功"))
     }
 }

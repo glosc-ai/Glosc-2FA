@@ -15,11 +15,11 @@ enum OTPCodeGeneratorError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidDigits:
-            return "验证码位数不合法。"
+            return L10n.tr("otp.invalid_digits", default: "验证码位数不合法。")
         case .invalidPeriod:
-            return "时间步长不合法。"
+            return L10n.tr("otp.invalid_period", default: "时间步长不合法。")
         case .invalidCounter:
-            return "计数器不合法。"
+            return L10n.tr("otp.invalid_counter", default: "计数器不合法。")
         }
     }
 }

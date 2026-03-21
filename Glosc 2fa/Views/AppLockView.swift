@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct AppLockView: View {
     let errorMessage: String?
@@ -25,11 +26,11 @@ struct AppLockView: View {
                 Image(systemName: canUseBiometrics ? "faceid" : "lock.fill")
                     .font(.system(size: 42))
 
-                Text("已锁定")
+                Text(L10n.tr("lock.title", default: "已锁定"))
                     .font(.title2)
                     .fontWeight(.semibold)
 
-                Text("需要先完成设备身份验证后，才能查看验证码与账号详情。")
+                Text(L10n.tr("lock.description", default: "需要先完成设备身份验证后，才能查看验证码与账号详情。"))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
 
@@ -43,14 +44,14 @@ struct AppLockView: View {
                 Button {
                     onUnlock()
                 } label: {
-                    Label(isAuthenticating ? "验证中..." : "验证身份", systemImage: canUseBiometrics ? "touchid" : "lock.open")
+                    Label(isAuthenticating ? L10n.tr("lock.authenticating", default: "验证中...") : L10n.tr("lock.authenticate", default: "验证身份"), systemImage: canUseBiometrics ? "touchid" : "lock.open")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
                 .disabled(isAuthenticating || !canAuthenticateDeviceOwner)
 
                 if !canAuthenticateDeviceOwner {
-                    Button("关闭身份验证锁定") {
+                    Button(L10n.tr("lock.disable_protection", default: "关闭身份验证锁定")) {
                         onDisableProtection()
                     }
                     .buttonStyle(.bordered)

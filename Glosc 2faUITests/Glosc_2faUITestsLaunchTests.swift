@@ -9,6 +9,7 @@ import XCTest
 
 final class Glosc_2faUITestsLaunchTests: XCTestCase {
     private let resetStateArgument = "UITEST_RESET_STATE"
+    private let languageArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_Hans"]
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
@@ -22,6 +23,7 @@ final class Glosc_2faUITestsLaunchTests: XCTestCase {
     func testLaunch() throws {
         let app = XCUIApplication()
         app.launchArguments.append(resetStateArgument)
+        app.launchArguments.append(contentsOf: languageArguments)
         app.launch()
 
         let attachment = XCTAttachment(screenshot: app.screenshot())

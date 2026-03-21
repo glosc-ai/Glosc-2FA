@@ -14,9 +14,9 @@ enum Base32DecoderError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .emptyInput:
-            return "Base32 内容为空。"
+            return L10n.tr("base32.empty", default: "Base32 内容为空。")
         case let .invalidCharacter(character):
-            return "Base32 内容包含非法字符：\(character)。"
+            return L10n.format("base32.invalid_character", default: "Base32 内容包含非法字符：%@。", String(character))
         }
     }
 }

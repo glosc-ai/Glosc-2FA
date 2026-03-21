@@ -9,6 +9,7 @@ import XCTest
 
 final class Glosc_2faUITests: XCTestCase {
     private let resetStateArgument = "UITEST_RESET_STATE"
+    private let languageArguments = ["-AppleLanguages", "(zh-Hans)", "-AppleLocale", "zh_Hans"]
 
     override func setUpWithError() throws {
         continueAfterFailure = false
@@ -51,6 +52,7 @@ final class Glosc_2faUITests: XCTestCase {
         app.buttons["settingsButton"].tap()
 
         XCTAssertTrue(app.segmentedControls["appThemePicker"].waitForExistence(timeout: 2))
+        XCTAssertTrue(app.descendants(matching: .any)["appLanguagePicker"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.switches["requireBiometricUnlockToggle"].waitForExistence(timeout: 2))
         XCTAssertTrue(app.switches["showFullSecretInDetailToggle"].exists)
         XCTAssertTrue(app.switches["hideCodesInListToggle"].exists)
@@ -100,6 +102,7 @@ final class Glosc_2faUITests: XCTestCase {
 
         let app = XCUIApplication()
         app.launchArguments.append(resetStateArgument)
+        app.launchArguments.append(contentsOf: languageArguments)
         app.launch()
         return app
     }

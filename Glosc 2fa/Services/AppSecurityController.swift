@@ -79,7 +79,7 @@ final class AppSecurityController: ObservableObject {
             return
         }
 
-        authenticate(reason: "解锁 Glosc 2FA 以查看验证码和账号信息") { [weak self] result in
+        authenticate(reason: L10n.tr("security.unlock.reason", default: "解锁 Glosc 2FA 以查看验证码和账号信息")) { [weak self] result in
             guard let self else {
                 return
             }
@@ -95,7 +95,7 @@ final class AppSecurityController: ObservableObject {
     }
 
     func enableProtection(completion: ((Result<Void, Error>) -> Void)? = nil) {
-        authenticate(reason: "开启身份验证保护前，请先验证你本人身份") { [weak self] result in
+        authenticate(reason: L10n.tr("security.enable.reason", default: "开启身份验证保护前，请先验证你本人身份")) { [weak self] result in
             guard let self else {
                 return
             }
@@ -116,7 +116,7 @@ final class AppSecurityController: ObservableObject {
     }
 
     func disableProtectionAfterAuthentication(completion: ((Result<Void, Error>) -> Void)? = nil) {
-        authenticate(reason: "关闭身份验证保护前，请先验证你本人身份") { [weak self] result in
+        authenticate(reason: L10n.tr("security.disable.reason", default: "关闭身份验证保护前，请先验证你本人身份")) { [weak self] result in
             guard let self else {
                 return
             }

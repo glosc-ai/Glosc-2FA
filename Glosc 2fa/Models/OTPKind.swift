@@ -16,9 +16,9 @@ enum OTPKind: String, CaseIterable, Codable, Identifiable {
     var title: String {
         switch self {
         case .totp:
-            return "TOTP"
+            return L10n.tr("otp.kind.totp", default: "TOTP")
         case .hotp:
-            return "HOTP"
+            return L10n.tr("otp.kind.hotp", default: "HOTP")
         }
     }
 }

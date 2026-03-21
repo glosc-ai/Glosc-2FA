@@ -23,9 +23,9 @@ enum AccountFormMode: Identifiable {
     var title: String {
         switch self {
         case .add:
-            return "添加账号"
+            return L10n.tr("common.add_account", default: "添加账号")
         case .edit:
-            return "编辑账号"
+            return L10n.tr("account.form.edit_title", default: "编辑账号")
         }
     }
 
@@ -49,11 +49,11 @@ private enum AccountInputMode: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .manual:
-            return "手动"
+            return L10n.tr("account.input.manual", default: "手动")
         case .otpauth:
-            return "链接导入"
+            return L10n.tr("account.input.link", default: "链接导入")
         case .scan:
-            return "扫码"
+            return L10n.tr("account.input.scan", default: "扫码")
         }
     }
 }
@@ -81,7 +81,7 @@ struct AccountFormView: View {
         NavigationStack {
             Form {
                 Section {
-                    Picker("录入方式", selection: $inputMode) {
+                    Picker(L10n.tr("account.form.input_mode", default: "录入方式"), selection: $inputMode) {
                         ForEach(AccountInputMode.allCases) { item in
                             Text(item.title).tag(item)
                         }
@@ -91,25 +91,25 @@ struct AccountFormView: View {
 
                 if inputMode == .otpauth {
                     Section {
-                        TextField("otpauth://totp/...", text: $importURI, axis: .vertical)
+                        TextField(L10n.tr("account.form.import_uri_placeholder", default: "otpauth://totp/..."), text: $importURI, axis: .vertical)
                             .textInputAutocapitalization(.never)
                             .disableAutocorrection(true)
                             .accessibilityIdentifier("importURITextField")
 
-                        Button("从链接填充") {
+                        Button(L10n.tr("account.form.import_from_link", default: "从链接填充")) {
                             importFromURI()
                         }
                         .accessibilityIdentifier("importURIButton")
                     } header: {
-                        Text("otpauth 链接")
+                        Text(L10n.tr("account.form.otpauth_section", default: "otpauth 链接"))
                     } footer: {
-                        Text("支持 TOTP 与 HOTP，issuer、secret、digits、period、counter、algorithm 会自动解析。")
+                        Text(L10n.tr("account.form.otpauth_footer", default: "支持 TOTP 与 HOTP，issuer、secret、digits、period、counter、algorithm 会自动解析。"))
                     }
                 }
 
                 if inputMode == .scan {
                     Section {
-                        Button("打开二维码扫描器") {
+                        Button(L10n.tr("scanner.open", default: "打开二维码扫描器")) {
                             isScannerPresented = true
                         }
                         .accessibilityIdentifier("openScannerButton")
@@ -120,56 +120,60 @@ struct AccountFormView: View {
                                 .foregroundStyle(.secondary)
                         }
                     } header: {
-                        Text("二维码导入")
+                        Text(L10n.tr("scanner.import_section", default: "二维码导入"))
                     } footer: {
-                        Text("扫描 otpauth 二维码后会自动填充账号表单。模拟器无摄像头时可继续使用链接导入。")
+                        Text(L10n.tr("scanner.import_footer", default: "扫描 otpauth 二维码后会自动填充账号表单。模拟器无摄像头时可继续使用链接导入。"))
                     }
                 }
 
-                Section("账号信息") {
-                    TextField("发行方，例如 GitHub", text: $draft.issuer)
+                Section {
+                    TextField(L10n.tr("account.form.issuer_placeholder", default: "发行方，例如 GitHub"), text: $draft.issuer)
                         .accessibilityIdentifier("issuerTextField")
 
-                    TextField("账号名称，例如 alice@example.com", text: $draft.accountName)
+                    TextField(L10n.tr("account.form.account_name_placeholder", default: "账号名称，例如 alice@example.com"), text: $draft.accountName)
                         .textInputAutocapitalization(.never)
                         .accessibilityIdentifier("accountNameTextField")
+                } header: {
+                    Text(L10n.tr("account.form.account_section", default: "账号信息"))
                 }
 
                 Section {
-                    TextField("Base32 共享密钥", text: $draft.secret)
+                    TextField(L10n.tr("account.form.secret_placeholder", default: "Base32 共享密钥"), text: $draft.secret)
                         .textInputAutocapitalization(.characters)
                         .disableAutocorrection(true)
                         .accessibilityIdentifier("secretTextField")
                 } header: {
-                    Text("密钥")
+                    Text(L10n.tr("account.form.secret_section", default: "密钥"))
                 } footer: {
-                    Text("会自动移除空格和连字符，并校验 Base32 格式。")
+                    Text(L10n.tr("account.form.secret_footer", default: "会自动移除空格和连字符，并校验 Base32 格式。"))
                 }
 
-                Section("配置") {
-                    Picker("类型", selection: $draft.kind) {
+                Section {
+                    Picker(L10n.tr("account.form.kind", default: "类型"), selection: $draft.kind) {
                         ForEach(OTPKind.allCases) { kind in
                             Text(kind.title).tag(kind)
                         }
                     }
 
-                    Picker("算法", selection: $draft.algorithm) {
+                    Picker(L10n.tr("account.form.algorithm", default: "算法"), selection: $draft.algorithm) {
                         ForEach(OTPAlgorithm.allCases) { algorithm in
                             Text(algorithm.rawValue).tag(algorithm)
                         }
                     }
 
-                    Picker("位数", selection: $draft.digits) {
+                    Picker(L10n.tr("account.form.digits", default: "位数"), selection: $draft.digits) {
                         ForEach(6...8, id: \.self) { digits in
-                            Text("\(digits) 位").tag(digits)
+                            Text(L10n.format("account.form.digits.option", default: "%d 位", digits)).tag(digits)
                         }
                     }
 
                     if draft.kind == .totp {
-                        Stepper("时间步长：\(draft.period) 秒", value: $draft.period, in: 5...120, step: 5)
+                        Stepper(L10n.format("account.form.period", default: "时间步长：%d 秒", draft.period), value: $draft.period, in: 5...120, step: 5)
                     } else {
-                        Stepper("起始计数器：\(draft.counter)", value: $draft.counter, in: 0...999_999)
+                        Stepper(L10n.format("account.form.counter", default: "起始计数器：%d", draft.counter), value: $draft.counter, in: 0...999_999)
                     }
+                } header: {
+                    Text(L10n.tr("account.form.config_section", default: "配置"))
                 }
             }
             .navigationTitle(mode.title)
@@ -183,20 +187,20 @@ struct AccountFormView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    Button("取消") {
+                    Button(L10n.tr("common.cancel", default: "取消")) {
                         dismiss()
                     }
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("保存") {
+                    Button(L10n.tr("common.save", default: "保存")) {
                         save()
                     }
                     .bold()
                     .accessibilityIdentifier("saveAccountButton")
                 }
             }
-            .alert("无法保存账号", isPresented: Binding(
+            .alert(L10n.tr("account.form.save_failed_title", default: "无法保存账号"), isPresented: Binding(
                 get: { errorMessage != nil },
                 set: { isPresented in
                     if !isPresented {
@@ -204,7 +208,7 @@ struct AccountFormView: View {
                     }
                 }
             )) {
-                Button("知道了", role: .cancel) {}
+                Button(L10n.tr("common.ok", default: "知道了"), role: .cancel) {}
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -223,10 +227,10 @@ struct AccountFormView: View {
     private func importFromURI() {
         do {
             draft = try OTPAuthURIParser.parse(importURI)
-            operationFeedbackController.showSuccess(message: "导入成功，已填充表单")
+            operationFeedbackController.showSuccess(message: L10n.tr("feedback.import.success", default: "导入成功，已填充表单"))
         } catch {
             errorMessage = error.localizedDescription
-            operationFeedbackController.showError(message: "导入失败")
+            operationFeedbackController.showError(message: L10n.tr("feedback.import.failed", default: "导入失败"))
         }
     }
 
@@ -236,7 +240,7 @@ struct AccountFormView: View {
             dismiss()
         } catch {
             errorMessage = error.localizedDescription
-            operationFeedbackController.showError(message: "保存失败")
+            operationFeedbackController.showError(message: L10n.tr("feedback.save.failed", default: "保存失败"))
         }
     }
 }

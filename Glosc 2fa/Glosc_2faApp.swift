@@ -53,6 +53,7 @@ struct Glosc_2faApp: App {
                 .environmentObject(preferences)
                 .environmentObject(securityController)
                 .environmentObject(operationFeedbackController)
+                .environment(\.locale, preferences.appLanguage.locale)
                 .preferredColorScheme(preferences.appTheme.colorScheme)
         }
         .modelContainer(sharedModelContainer)

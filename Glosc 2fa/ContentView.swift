@@ -28,11 +28,11 @@ struct ContentView: View {
             Group {
                 if accounts.isEmpty {
                     ContentUnavailableView {
-                        Label("还没有账号", systemImage: "key.fill")
+                        Label(L10n.tr("content.empty.title", default: "还没有账号"), systemImage: "key.fill")
                     } description: {
-                        Text("支持手动添加账号，或直接粘贴 otpauth 链接完成导入。")
+                        Text(L10n.tr("content.empty.description", default: "支持手动添加账号，或直接粘贴 otpauth 链接完成导入。"))
                     } actions: {
-                        Button("添加账号") {
+                        Button(L10n.tr("common.add_account", default: "添加账号")) {
                             formMode = .add
                         }
                         .buttonStyle(.borderedProminent)
@@ -51,12 +51,12 @@ struct ContentView: View {
                                 AccountRowView(account: account)
                             }
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                Button("编辑") {
+                                Button(L10n.tr("common.edit", default: "编辑")) {
                                     formMode = .edit(account)
                                 }
                                 .tint(.blue)
 
-                                Button("删除", role: .destructive) {
+                                Button(L10n.tr("common.delete", default: "删除"), role: .destructive) {
                                     delete(account)
                                 }
                             }
@@ -66,13 +66,13 @@ struct ContentView: View {
                     .listStyle(.insetGrouped)
                 }
             }
-            .navigationTitle("Glosc 2FA")
+            .navigationTitle(L10n.tr("app.name", default: "Glosc 2FA"))
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button {
                         isSettingsPresented = true
                     } label: {
-                        Label("设置", systemImage: "gearshape")
+                        Label(L10n.tr("settings.title", default: "设置"), systemImage: "gearshape")
                     }
                     .accessibilityIdentifier("settingsButton")
                 }
@@ -81,7 +81,7 @@ struct ContentView: View {
                     Button {
                         formMode = .add
                     } label: {
-                        Label("添加账号", systemImage: "plus")
+                        Label(L10n.tr("common.add_account", default: "添加账号"), systemImage: "plus")
                     }
                     .accessibilityIdentifier("addAccountButton")
                 }
@@ -142,9 +142,9 @@ struct ContentView: View {
 
         switch mode {
         case .add:
-            operationFeedbackController.showSuccess(message: "账号添加成功")
+            operationFeedbackController.showSuccess(message: L10n.tr("feedback.account.added", default: "账号添加成功"))
         case .edit:
-            operationFeedbackController.showSuccess(message: "账号更新成功")
+            operationFeedbackController.showSuccess(message: L10n.tr("feedback.account.updated", default: "账号更新成功"))
         }
     }
 
@@ -160,9 +160,9 @@ struct ContentView: View {
 
         let deletedCount = offsets.count
         if deletedCount == 1 {
-            operationFeedbackController.showSuccess(message: "删除成功")
+            operationFeedbackController.showSuccess(message: L10n.tr("feedback.delete.success", default: "删除成功"))
         } else if deletedCount > 1 {
-            operationFeedbackController.showSuccess(message: "已删除 \(deletedCount) 个账号")
+            operationFeedbackController.showSuccess(message: L10n.format("feedback.delete.multiple", default: "已删除 %d 个账号", deletedCount))
         }
     }
 
@@ -173,7 +173,7 @@ struct ContentView: View {
             try? modelContext.save()
         }
 
-        operationFeedbackController.showSuccess(message: "删除成功")
+        operationFeedbackController.showSuccess(message: L10n.tr("feedback.delete.success", default: "删除成功"))
     }
 
     private func migrateLegacySecretsIfNeeded() {
