@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		D1F18A6C2F7E3163009F50BA /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = D1F18A6B2F7E3163009F50BA /* FirebaseAnalytics */; };
+		D1F18A6E2F7E3163009F50BA /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = D1F18A6D2F7E3163009F50BA /* FirebaseAuth */; };
+		D1F18A702F7E3163009F50BA /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = D1F18A6F2F7E3163009F50BA /* FirebaseFirestore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		D19EE8512F6BD82C00BCEBC3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +58,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D1F18A6C2F7E3163009F50BA /* FirebaseAnalytics in Frameworks */,
+				D1F18A6E2F7E3163009F50BA /* FirebaseAuth in Frameworks */,
+				D1F18A702F7E3163009F50BA /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +121,9 @@
 			);
 			name = "Glosc 2fa";
 			packageProductDependencies = (
+				D1F18A6B2F7E3163009F50BA /* FirebaseAnalytics */,
+				D1F18A6D2F7E3163009F50BA /* FirebaseAuth */,
+				D1F18A6F2F7E3163009F50BA /* FirebaseFirestore */,
 			);
 			productName = "Glosc 2fa";
 			productReference = D19EE8412F6BD82B00BCEBC3 /* Glosc 2fa.app */;
@@ -203,6 +215,9 @@
 			);
 			mainGroup = D19EE8382F6BD82B00BCEBC3;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D1F18A6A2F7E3163009F50BA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = D19EE8422F6BD82B00BCEBC3 /* Products */;
 			projectDirPath = "";
@@ -612,6 +627,35 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		D1F18A6A2F7E3163009F50BA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.11.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		D1F18A6B2F7E3163009F50BA /* FirebaseAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1F18A6A2F7E3163009F50BA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAnalytics;
+		};
+		D1F18A6D2F7E3163009F50BA /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1F18A6A2F7E3163009F50BA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		D1F18A6F2F7E3163009F50BA /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D1F18A6A2F7E3163009F50BA /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = D19EE8392F6BD82B00BCEBC3 /* Project object */;
 }
