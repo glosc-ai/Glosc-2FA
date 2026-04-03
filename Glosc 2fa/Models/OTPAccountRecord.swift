@@ -120,6 +120,51 @@ final class OTPAccountRecord {
         legacySecret = ""
     }
 
+    var cloudPayload: CloudAccountPayload {
+        CloudAccountPayload(
+            id: id,
+            issuer: issuer,
+            accountName: accountName,
+            secret: secret,
+            algorithmRawValue: algorithmRawValue,
+            digits: digits,
+            period: period,
+            kindRawValue: kindRawValue,
+            counter: counter,
+            createdAt: createdAt,
+            updatedAt: updatedAt
+        )
+    }
+
+    convenience init(cloudPayload: CloudAccountPayload) throws {
+        self.init(
+            id: cloudPayload.id,
+            issuer: cloudPayload.issuer,
+            accountName: cloudPayload.accountName,
+            secret: cloudPayload.secret,
+            algorithm: OTPAlgorithm(rawValue: cloudPayload.algorithmRawValue) ?? .sha1,
+            digits: cloudPayload.digits,
+            period: cloudPayload.period,
+            kind: OTPKind(rawValue: cloudPayload.kindRawValue) ?? .totp,
+            counter: cloudPayload.counter,
+            createdAt: cloudPayload.createdAt,
+            updatedAt: cloudPayload.updatedAt
+        )
+    }
+
+    func apply(cloudPayload: CloudAccountPayload) throws {
+        issuer = cloudPayload.issuer
+        accountName = cloudPayload.accountName
+        try updateSecret(cloudPayload.secret)
+        algorithmRawValue = cloudPayload.algorithmRawValue
+        digits = cloudPayload.digits
+        period = cloudPayload.period
+        kindRawValue = cloudPayload.kindRawValue
+        counter = cloudPayload.counter
+        createdAt = cloudPayload.createdAt
+        updatedAt = cloudPayload.updatedAt
+    }
+
     private static func maskedSecret(_ secret: String) -> String {
         let sanitized = secret
             .uppercased()

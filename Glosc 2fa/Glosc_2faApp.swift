@@ -7,16 +7,35 @@
 
 import SwiftUI
 import SwiftData
+import FirebaseCore
+import FirebaseAuth
+import UIKit
+
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        if FirebaseApp.app() == nil {
+            FirebaseApp.configure()
+        }
+
+        return true
+    }
+}
 
 @main
 struct Glosc_2faApp: App {
     private static let uiTestingResetArgument = "UITEST_RESET_STATE"
+
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
     @Environment(\.scenePhase) private var scenePhase
 
     @StateObject private var preferences: AppPreferences
     @StateObject private var securityController: AppSecurityController
     @StateObject private var operationFeedbackController = OperationFeedbackController()
+    @StateObject private var cloudSyncController = CloudSyncController()
 
     var sharedModelContainer: ModelContainer = {
         let useInMemoryStore = ProcessInfo.processInfo.arguments.contains(uiTestingResetArgument)
@@ -53,12 +72,22 @@ struct Glosc_2faApp: App {
                 .environmentObject(preferences)
                 .environmentObject(securityController)
                 .environmentObject(operationFeedbackController)
+                .environmentObject(cloudSyncController)
                 .environment(\.locale, preferences.appLanguage.locale)
                 .preferredColorScheme(preferences.appTheme.colorScheme)
+                .onOpenURL { url in
+                    handleIncomingURL(url)
+                }
         }
         .modelContainer(sharedModelContainer)
         .onChange(of: scenePhase, initial: true) { _, newPhase in
             securityController.handleScenePhase(newPhase)
+        }
+    }
+
+    private func handleIncomingURL(_ url: URL) {
+        if Auth.auth().canHandle(url) {
+            return
         }
     }
 }

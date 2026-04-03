@@ -12,6 +12,7 @@ import UIKit
 struct AccountDetailView: View {
     @EnvironmentObject private var preferences: AppPreferences
     @EnvironmentObject private var operationFeedbackController: OperationFeedbackController
+    @EnvironmentObject private var cloudSyncController: CloudSyncController
 
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
@@ -146,6 +147,7 @@ struct AccountDetailView: View {
                         account.counter = OTPCodeGenerator.nextCounter(afterUsing: account)
                         account.updatedAt = .now
                         try? modelContext.save()
+                        cloudSyncController.scheduleUpsert(account)
                     } label: {
                         Label(L10n.tr("account.detail.advance_hotp", default: "标记当前 HOTP 已使用"), systemImage: "arrow.triangle.2.circlepath")
                             .frame(maxWidth: .infinity)

@@ -13,7 +13,8 @@ import Testing
 @Suite(.serialized)
 struct Glosc_2faTests {
 
-    private func withAppLanguage<T>(_ language: AppLanguage, perform: () throws -> T) rethrows -> T {
+    @MainActor
+    private func withAppLanguage<T>(_ language: AppLanguage, perform: () -> T) -> T {
         let defaults = UserDefaults.standard
         let originalValue = defaults.string(forKey: AppPreferences.appLanguageDefaultsKey)
 
@@ -26,7 +27,7 @@ struct Glosc_2faTests {
             }
         }
 
-        return try perform()
+        return perform()
     }
 
     private struct MockAuthenticationError: LocalizedError {
@@ -153,6 +154,100 @@ struct Glosc_2faTests {
         }
     }
 
+    @Test func cloudSyncCryptoDerivesStableKeyForSamePassphraseAndSalt() throws {
+        let salt = Data("stable-salt".utf8)
+        let firstKey = try CloudSyncCrypto.deriveKey(passphrase: "correct horse battery staple", salt: salt)
+        let secondKey = try CloudSyncCrypto.deriveKey(passphrase: "correct horse battery staple", salt: salt)
+
+        #expect(CloudSyncCrypto.exportKey(firstKey) == CloudSyncCrypto.exportKey(secondKey))
+    }
+
+    @Test @MainActor func cloudSyncCryptoEncryptsAndDecryptsPayload() throws {
+        let salt = Data("payload-salt".utf8)
+        let key = try CloudSyncCrypto.deriveKey(passphrase: "sync-passphrase", salt: salt)
+        let payload = CloudAccountPayload(
+            id: UUID(uuidString: "11111111-2222-3333-4444-555555555555") ?? UUID(),
+            issuer: "GitHub",
+            accountName: "alice@example.com",
+            secret: "JBSWY3DPEHPK3PXP",
+            algorithmRawValue: OTPAlgorithm.sha256.rawValue,
+            digits: 8,
+            period: 45,
+            kindRawValue: OTPKind.totp.rawValue,
+            counter: 0,
+            createdAt: Date(timeIntervalSince1970: 1_711_111_111),
+            updatedAt: Date(timeIntervalSince1970: 1_722_222_222)
+        )
+
+        let ciphertext = try CloudSyncCrypto.encrypt(payload, using: key)
+        let decrypted = try CloudSyncCrypto.decrypt(ciphertext, using: key)
+
+        #expect(decrypted == payload)
+    }
+
+    @Test func cloudSyncCryptoCreatesAndVerifiesKeyVerifier() throws {
+        let salt = Data("verifier-salt".utf8)
+        let key = try CloudSyncCrypto.deriveKey(passphrase: "another sync passphrase", salt: salt)
+        let verifier = try CloudSyncCrypto.makeKeyVerifier(using: key)
+
+        #expect(CloudSyncCrypto.verifyKeyVerifier(verifier, using: key))
+
+        let differentKey = try CloudSyncCrypto.deriveKey(passphrase: "different passphrase", salt: salt)
+        #expect(CloudSyncCrypto.verifyKeyVerifier(verifier, using: differentKey) == false)
+    }
+
+    @Test func cloudSyncCryptoRejectsEmptyPassphrase() {
+        #expect(throws: CloudSyncCryptoError.invalidPassword) {
+            _ = try CloudSyncCrypto.deriveKey(passphrase: "   ", salt: Data("salt".utf8))
+        }
+    }
+
+    @Test func cloudSyncPassphraseValidatorRejectsMissingPassphrase() {
+        #expect(throws: CloudSyncAuthError.missingPassphrase) {
+            _ = try CloudSyncPassphraseValidator.validateUnlock(passphrase: "   ")
+        }
+    }
+
+    @Test func cloudSyncPassphraseValidatorRejectsMismatch() {
+        #expect(throws: CloudSyncAuthError.passphraseMismatch) {
+            _ = try CloudSyncPassphraseValidator.validateCreation(passphrase: "secret123", confirmPassphrase: "secret456")
+        }
+    }
+
+    @Test func cloudSyncPassphraseValidatorAcceptsValidCreationInput() throws {
+        let validated = try CloudSyncPassphraseValidator.validateCreation(passphrase: " secret123 ", confirmPassphrase: "secret123")
+
+        #expect(validated == "secret123")
+    }
+
+    @Test func cloudSyncCallbackSchemeEncodesFirebaseAppID() {
+        let callbackScheme = CloudSyncCallbackScheme.encodedFirebaseAppIDScheme(from: "1:224927712933:ios:4312b74692bb3bfc272f4c")
+
+        #expect(callbackScheme == "app-1-224927712933-ios-4312b74692bb3bfc272f4c")
+    }
+
+    @Test func cloudSyncCallbackSchemeReversesClientID() {
+        let reversedScheme = CloudSyncCallbackScheme.reversedClientIDScheme(from: "224927712933-abcdefg123.apps.googleusercontent.com")
+
+        #expect(reversedScheme == "com.googleusercontent.apps.224927712933-abcdefg123")
+    }
+
+    @Test func cloudSyncCallbackSchemeDetectsRegisteredScheme() {
+        let infoDictionary: [String: Any] = [
+            "CFBundleURLTypes": [
+                [
+                    "CFBundleURLSchemes": [
+                        "app-1-224927712933-ios-4312b74692bb3bfc272f4c",
+                        "com.example.other",
+                    ],
+                ],
+            ],
+        ]
+
+        #expect(CloudSyncCallbackScheme.isRegistered("app-1-224927712933-ios-4312b74692bb3bfc272f4c", in: infoDictionary))
+        #expect(CloudSyncCallbackScheme.isRegistered("com.example.missing", in: infoDictionary) == false)
+    }
+
     @Test @MainActor func appLanguagePreferencePersistsSelectedLanguage() {
         AppPreferences.resetForTesting()
 
@@ -163,16 +258,16 @@ struct Glosc_2faTests {
         #expect(reloadedPreferences.appLanguage == .english)
     }
 
-    @Test func localizationUsesSelectedAppLanguage() throws {
-        try withAppLanguage(.english) {
+    @Test @MainActor func localizationUsesSelectedAppLanguage() {
+        withAppLanguage(.english) {
             #expect(L10n.tr("settings.title", default: "设置") == "Settings")
         }
 
-        try withAppLanguage(.simplifiedChinese) {
+        withAppLanguage(.simplifiedChinese) {
             #expect(L10n.tr("settings.title", default: "Settings") == "设置")
         }
 
-        try withAppLanguage(.korean) {
+        withAppLanguage(.korean) {
             #expect(L10n.tr("settings.title", default: "Settings") == "설정")
         }
     }

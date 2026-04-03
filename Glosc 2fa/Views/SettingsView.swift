@@ -12,6 +12,9 @@ struct SettingsView: View {
     @EnvironmentObject private var preferences: AppPreferences
     @EnvironmentObject private var securityController: AppSecurityController
     @EnvironmentObject private var operationFeedbackController: OperationFeedbackController
+    @EnvironmentObject private var cloudSyncController: CloudSyncController
+
+    @State private var passphraseSheetMode: CloudSyncPassphrasePrompt?
 
     var body: some View {
         NavigationStack {
@@ -62,12 +65,15 @@ struct SettingsView: View {
                     Text(L10n.tr("settings.display.section", default: "显示"))
                 }
 
+                CloudSyncSettingsSection(passphraseSheetMode: $passphraseSheetMode)
+
                 Section {
                     Label(L10n.tr("settings.capabilities.import", default: "支持手动添加和 otpauth / 二维码导入"), systemImage: "qrcode.viewfinder")
                     Label(L10n.tr("settings.capabilities.algorithms", default: "支持 TOTP、HOTP 与三种 HMAC 算法"), systemImage: "key.fill")
                     Label(L10n.tr("settings.capabilities.keychain", default: "密钥已迁移到 Keychain 安全存储"), systemImage: "lock.shield")
                     Label(L10n.tr("settings.capabilities.copy_detail", default: "详情页轻点或长按验证码可快速复制"), systemImage: "hand.tap")
                     Label(L10n.tr("settings.capabilities.copy_list", default: "列表长按账号可快速复制当前验证码"), systemImage: "hand.point.up.left")
+                    Label(L10n.tr("settings.capabilities.sync", default: "支持可选登录与 Firebase 加密云同步"), systemImage: "icloud.and.arrow.up")
                 } header: {
                     Text(L10n.tr("settings.capabilities.section", default: "当前能力"))
                 }
@@ -90,6 +96,16 @@ struct SettingsView: View {
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: operationFeedbackController.currentFeedback)
+            .onChange(of: cloudSyncController.passphrasePrompt) { _, newPrompt in
+                guard let newPrompt, passphraseSheetMode == nil else {
+                    return
+                }
+
+                passphraseSheetMode = newPrompt
+            }
+            .sheet(item: $passphraseSheetMode) { mode in
+                CloudSyncPassphraseSheetView(mode: mode)
+            }
         }
         .preferredColorScheme(preferences.appTheme.colorScheme)
     }

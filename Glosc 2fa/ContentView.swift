@@ -13,6 +13,7 @@ struct ContentView: View {
     @EnvironmentObject private var preferences: AppPreferences
     @EnvironmentObject private var securityController: AppSecurityController
     @EnvironmentObject private var operationFeedbackController: OperationFeedbackController
+    @EnvironmentObject private var cloudSyncController: CloudSyncController
 
     @Query private var accounts: [OTPAccountRecord]
 
@@ -96,6 +97,7 @@ struct ContentView: View {
             }
             .task {
                 migrateLegacySecretsIfNeeded()
+                cloudSyncController.attach(modelContext: modelContext)
             }
             .overlay {
                 ZStack(alignment: .top) {
@@ -133,12 +135,15 @@ struct ContentView: View {
     private func save(_ draft: OTPAccountDraft, for mode: AccountFormMode) throws {
         switch mode {
         case .add:
-            modelContext.insert(try draft.makeRecord())
+            let account = try draft.makeRecord()
+            modelContext.insert(account)
+            try modelContext.save()
+            cloudSyncController.scheduleUpsert(account)
         case let .edit(account):
             try draft.apply(to: account)
+            try modelContext.save()
+            cloudSyncController.scheduleUpsert(account)
         }
-
-        try modelContext.save()
 
         switch mode {
         case .add:
@@ -151,6 +156,8 @@ struct ContentView: View {
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
+                let account = accounts[index]
+                cloudSyncController.scheduleDeletion(for: account.id)
                 accounts[index].removeSecretFromSecureStore()
                 modelContext.delete(accounts[index])
             }
@@ -168,6 +175,7 @@ struct ContentView: View {
 
     private func delete(_ account: OTPAccountRecord) {
         withAnimation {
+            cloudSyncController.scheduleDeletion(for: account.id)
             account.removeSecretFromSecureStore()
             modelContext.delete(account)
             try? modelContext.save()
@@ -197,4 +205,5 @@ struct ContentView: View {
         .environmentObject(AppPreferences())
         .environmentObject(AppSecurityController(preferences: AppPreferences()))
         .environmentObject(OperationFeedbackController())
+        .environmentObject(CloudSyncController())
 }
